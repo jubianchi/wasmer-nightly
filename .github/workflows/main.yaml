@@ -86,6 +86,14 @@ jobs:
           toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
+          default: true
+      - name: Setup Rust target
+        run: |
+          cat << EOF > .cargo/config.toml
+          [build]
+          target = "${{ matrix.target }}"
+          EOF
+        if: matrix.target
       #- name: Cache
       #  uses: actions/cache@master
       #  with:
@@ -117,12 +125,6 @@ jobs:
       - name: Install LLVM (Windows)
         if: matrix.os == 'windows-latest'
         run: choco install llvm
-        # run: |
-        #   curl --proto '=https' --tlsv1.2 -sSf https://github.com/llvm/llvm-project/releases/download/llvmorg-10.0.0/LLVM-10.0.0-win64.exe -L -o llvm-installer.exe
-        #   7z x llvm-installer.exe -oC:/llvm-10
-        #   echo C:/llvm-10/bin >> $GITHUB_PATH
-        #   echo "LLVM_SYS_100_PREFIX=C:/llvm-10" >> $GITHUB_ENV
-        #   echo "LIBCLANG_PATH=C:/llvm-10/bin/libclang.dll" >> $GITHUB_ENV
       - name: Install LLVM (Unix)
         if: matrix.os != 'windows-latest' && matrix.build != 'linux-musl-x64'
         run: |
@@ -181,6 +183,7 @@ jobs:
         with:
           name: ${{ matrix.artifact_name }}
           path: dist
+          retention-days: 1
       - name: Post to Slack on failure
         if: failure() && (github.event == 'schedule' || github.ref == 'refs/heads/master')
         run: |
